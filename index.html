@@ -762,14 +762,14 @@
           <div class="feature-icon">1</div>
           <div class="feature-text">
             <strong>CSV importieren</strong>
-            Lade deine Karteikarten als CSV-Datei hoch. Format: Vorderseite und Rueckseite getrennt durch Semikolon oder Komma.
+            Lade deine Karteikarten als CSV-Datei hoch. Format: Vorderseite und Rückseite getrennt durch Semikolon oder Komma.
           </div>
         </div>
         <div class="feature-item">
           <div class="feature-icon">2</div>
           <div class="feature-text">
             <strong>Karten lernen</strong>
-            Sieh dir die Vorderseite an, ueberlege, und dreh die Karte um. Markiere, ob du es wusstest.
+            Sieh dir die Vorderseite an, überlege, und dreh die Karte um. Markiere, ob du es wusstest.
           </div>
         </div>
         <div class="feature-item">
@@ -790,7 +790,7 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-number" id="stat-due">0</div>
-        <div class="stat-label">Faellig</div>
+        <div class="stat-label">Fällig</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="stat-streak">0</div>
@@ -804,7 +804,7 @@
 
     <div class="due-message" id="due-message">
       <h2 id="due-title">Bereit zum Lernen</h2>
-      <p id="due-subtitle">Keine faelligen Karten heute.</p>
+      <p id="due-subtitle">Keine fälligen Karten heute.</p>
       <button class="btn btn-primary" id="btn-start-learn">Lernen starten</button>
     </div>
 
@@ -824,14 +824,14 @@
 
     <div class="drop-zone" id="drop-zone">
       <div class="drop-zone-text">CSV-Datei hierher ziehen oder klicken</div>
-      <div class="drop-zone-hint">Format: Vorderseite;Rueckseite (UTF-8)</div>
+      <div class="drop-zone-hint">Format: Vorderseite;Rückseite (UTF-8)</div>
       <input type="file" class="file-input" id="file-input" accept=".csv,.txt" />
     </div>
 
     <div class="format-info">
-      Unterstuetzte Formate:<br>
+      Unterstützte Formate:<br>
       <code>Frage;Antwort</code> oder <code>Frage,Antwort</code><br>
-      Felder mit Kommas in Anfuehrungszeichen einschliessen:<br>
+      Felder mit Kommas in Anführungszeichen einschließen:<br>
       <code>"Frage, mit Komma";"Antwort"</code>
     </div>
 
@@ -842,7 +842,7 @@
         <thead>
           <tr>
             <th style="width:50%">Vorderseite</th>
-            <th style="width:50%">Rueckseite</th>
+            <th style="width:50%">Rückseite</th>
           </tr>
         </thead>
         <tbody id="preview-body"></tbody>
@@ -853,7 +853,7 @@
       </div>
     </div>
 
-    <button class="btn btn-outline btn-small mt-24" id="btn-import-back">Zurueck</button>
+    <button class="btn btn-outline btn-small mt-24" id="btn-import-back">Zurück</button>
   </div>
 
   <!-- ===== Learn Screen ===== -->
@@ -874,7 +874,7 @@
           <div class="card-hint">Klicken oder Leertaste zum Umdrehen</div>
         </div>
         <div class="card-face card-face-back">
-          <div class="card-label">Rueckseite</div>
+          <div class="card-label">Rückseite</div>
           <div class="card-content" id="card-back-text"></div>
         </div>
       </div>
@@ -911,7 +911,7 @@
         </div>
       </div>
 
-      <button class="btn btn-primary btn-block" id="btn-done-back">Zurueck zur Uebersicht</button>
+      <button class="btn btn-primary btn-block" id="btn-done-back">Zurück zur Übersicht</button>
     </div>
   </div>
 
@@ -927,14 +927,14 @@
 
     <div class="settings-section">
       <h3>Karten importieren</h3>
-      <p>Neue Karten aus einer CSV-Datei hinzufuegen.</p>
+      <p>Neue Karten aus einer CSV-Datei hinzufügen.</p>
       <button class="btn btn-outline btn-small" id="btn-settings-import">CSV importieren</button>
     </div>
 
     <div class="settings-section danger-zone">
-      <h3>Alle Daten loeschen</h3>
+      <h3>Alle Daten löschen</h3>
       <p>Entfernt alle Karten und den Lernfortschritt unwiderruflich.</p>
-      <button class="btn btn-danger btn-small" id="btn-delete-all">Alle Daten loeschen</button>
+      <button class="btn btn-danger btn-small" id="btn-delete-all">Alle Daten löschen</button>
     </div>
 
     <div class="nav-bottom">
@@ -948,10 +948,10 @@
 <div class="dialog-overlay" id="dialog-overlay">
   <div class="dialog-box">
     <h3 id="dialog-title">Bist du sicher?</h3>
-    <p id="dialog-message">Diese Aktion kann nicht rueckgaengig gemacht werden.</p>
+    <p id="dialog-message">Diese Aktion kann nicht rückgängig gemacht werden.</p>
     <div class="dialog-actions">
       <button class="btn btn-outline btn-small" id="dialog-cancel">Abbrechen</button>
-      <button class="btn btn-danger btn-small" id="dialog-confirm">Loeschen</button>
+      <button class="btn btn-danger btn-small" id="dialog-confirm">Löschen</button>
     </div>
   </div>
 </div>
@@ -1276,17 +1276,17 @@
 
       if (due.length > 0) {
         this.elements.dueTitle.textContent = due.length + ' Karten warten auf dich';
-        this.elements.dueSubtitle.textContent = sessionSize + ' Karten in der naechsten Session';
+        this.elements.dueSubtitle.textContent = sessionSize + ' Karten in der nächsten Session';
         this.elements.btnStartLearn.textContent = 'Lernen starten';
         this.elements.btnStartLearn.classList.remove('hidden');
       } else if (newCards.length > 0) {
-        this.elements.dueTitle.textContent = 'Neue Karten verfuegbar';
+        this.elements.dueTitle.textContent = 'Neue Karten verfügbar';
         this.elements.dueSubtitle.textContent = newCards.length + ' neue Karten zum Lernen';
         this.elements.btnStartLearn.textContent = 'Neue Karten lernen';
         this.elements.btnStartLearn.classList.remove('hidden');
       } else if (data.cards.length > 0) {
         this.elements.dueTitle.textContent = 'Alles erledigt';
-        this.elements.dueSubtitle.textContent = 'Heute sind keine Karten faellig. Komm morgen wieder!';
+        this.elements.dueSubtitle.textContent = 'Heute sind keine Karten fällig. Komm morgen wieder!';
         this.elements.btnStartLearn.classList.add('hidden');
       } else {
         this.elements.dueTitle.textContent = 'Noch keine Karten';
@@ -1345,7 +1345,7 @@
       return new Promise((resolve) => {
         this.elements.dialogTitle.textContent = title;
         this.elements.dialogMessage.textContent = message;
-        this.elements.dialogConfirm.textContent = confirmText || 'Bestaetigen';
+        this.elements.dialogConfirm.textContent = confirmText || 'Bestätigen';
         this.elements.dialogOverlay.classList.add('visible');
 
         const onConfirm = () => {
@@ -1512,9 +1512,9 @@
       // Settings: Delete all
       document.getElementById('btn-delete-all').addEventListener('click', async () => {
         const confirmed = await UI.showDialog(
-          'Alle Daten loeschen?',
-          'Alle Karten und der Lernfortschritt werden unwiderruflich geloescht.',
-          'Endgueltig loeschen'
+          'Alle Daten löschen?',
+          'Alle Karten und der Lernfortschritt werden unwiderruflich gelöscht.',
+          'Endgültig löschen'
         );
         if (confirmed) {
           Storage.clearAll();
@@ -1565,7 +1565,7 @@
         const valid = Import.validateCards(parsed);
 
         if (valid.length === 0) {
-          alert('Keine gueltigen Karten gefunden. Bitte pruefe das Format der Datei.');
+          alert('Keine gültigen Karten gefunden. Bitte prüfe das Format der Datei.');
           return;
         }
 
