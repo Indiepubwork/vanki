@@ -291,6 +291,59 @@
       margin-top: 4px;
     }
 
+    /* Tooltips */
+    .has-tooltip {
+      position: relative;
+      cursor: help;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      font-size: 0.78rem;
+      line-height: 1.4;
+      padding: 8px 12px;
+      border-radius: 8px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 10;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: var(--text-primary);
+    }
+
+    .has-tooltip:hover .tooltip,
+    .has-tooltip.tooltip-visible .tooltip {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      .tooltip {
+        font-size: 0.72rem;
+        padding: 6px 10px;
+        max-width: 200px;
+        white-space: normal;
+        text-align: center;
+      }
+    }
+
     .due-message {
       background: var(--bg-card);
       border-radius: var(--radius-lg);
@@ -788,22 +841,25 @@
   <!-- ===== Dashboard Screen ===== -->
   <div class="screen" id="screen-dashboard">
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card has-tooltip">
+        <span class="tooltip">Karten, die heute wiederholt werden müssen</span>
         <div class="stat-number" id="stat-due">0</div>
         <div class="stat-label">Fällig</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card has-tooltip">
+        <span class="tooltip">So viele Tage hast du ohne Unterbrechung gelernt</span>
         <div class="stat-number" id="stat-streak">0</div>
-        <div class="stat-label">Streak</div>
+        <div class="stat-label">Tage in Folge</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card has-tooltip">
+        <span class="tooltip">Alle Karten in deinem Deck</span>
         <div class="stat-number" id="stat-total">0</div>
         <div class="stat-label">Gesamt</div>
       </div>
     </div>
 
     <div class="due-message" id="due-message">
-      <h2 id="due-title">Bereit zum Lernen</h2>
+      <h2 id="due-title" class="has-tooltip">Bereit zum Lernen<span class="tooltip hidden" id="due-tooltip"></span></h2>
       <p id="due-subtitle">Keine fälligen Karten heute.</p>
       <button class="btn btn-primary" id="btn-start-learn">Lernen starten</button>
     </div>
@@ -1244,6 +1300,7 @@
         statStreak: document.getElementById('stat-streak'),
         statTotal: document.getElementById('stat-total'),
         dueTitle: document.getElementById('due-title'),
+        dueTooltip: document.getElementById('due-tooltip'),
         dueSubtitle: document.getElementById('due-subtitle'),
         btnStartLearn: document.getElementById('btn-start-learn'),
         doneTotalEl: document.getElementById('done-total'),
@@ -1256,6 +1313,17 @@
         dialogConfirm: document.getElementById('dialog-confirm'),
         dialogCancel: document.getElementById('dialog-cancel')
       };
+
+      // Touch support for tooltips (mobile tap to show)
+      document.addEventListener('touchstart', (e) => {
+        const tooltipHost = e.target.closest('.has-tooltip');
+        document.querySelectorAll('.has-tooltip.tooltip-visible').forEach(el => {
+          if (el !== tooltipHost) el.classList.remove('tooltip-visible');
+        });
+        if (tooltipHost) {
+          tooltipHost.classList.toggle('tooltip-visible');
+        }
+      });
     },
 
     showScreen(name) {
@@ -1275,26 +1343,39 @@
       this.elements.statTotal.textContent = data.cards.length;
 
       if (due.length > 0) {
-        this.elements.dueTitle.textContent = due.length + ' Karten warten auf dich';
+        this.setDueTitle(due.length + ' Karten warten auf dich');
+        this.elements.dueTooltip.classList.add('hidden');
         this.elements.dueSubtitle.textContent = sessionSize + ' Karten in der nächsten Session';
         this.elements.btnStartLearn.textContent = 'Lernen starten';
         this.elements.btnStartLearn.classList.remove('hidden');
       } else if (newCards.length > 0) {
-        this.elements.dueTitle.textContent = 'Neue Karten verfügbar';
+        this.setDueTitle('Neue Karten verfügbar');
+        this.elements.dueTooltip.textContent = 'Karten, die du noch nie gelernt hast';
+        this.elements.dueTooltip.classList.remove('hidden');
         this.elements.dueSubtitle.textContent = newCards.length + ' neue Karten zum Lernen';
         this.elements.btnStartLearn.textContent = 'Neue Karten lernen';
         this.elements.btnStartLearn.classList.remove('hidden');
       } else if (data.cards.length > 0) {
-        this.elements.dueTitle.textContent = 'Alles erledigt';
+        this.setDueTitle('Alles erledigt');
+        this.elements.dueTooltip.classList.add('hidden');
         this.elements.dueSubtitle.textContent = 'Heute sind keine Karten fällig. Komm morgen wieder!';
         this.elements.btnStartLearn.classList.add('hidden');
       } else {
-        this.elements.dueTitle.textContent = 'Noch keine Karten';
+        this.setDueTitle('Noch keine Karten');
+        this.elements.dueTooltip.classList.add('hidden');
         this.elements.dueSubtitle.textContent = 'Importiere eine CSV-Datei, um loszulegen.';
         this.elements.btnStartLearn.classList.add('hidden');
       }
 
       this.showScreen('dashboard');
+    },
+
+    setDueTitle(text) {
+      const el = this.elements.dueTitle;
+      // Replace only the text node, keep the tooltip span
+      const tooltip = this.elements.dueTooltip;
+      el.textContent = text;
+      el.appendChild(tooltip);
     },
 
     showCard(card, index, total) {
