@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vanki - Spaced Repetition Lernkarten</title>
+  <style>
+    /* =========================================
+       CSS Variables (Dark Mode vorbereitet)
+       ========================================= */
+    :root {
+      --bg-primary: #faf8f5;
+      --bg-secondary: #f0ece6;
+      --bg-card: #ffffff;
+      --text-primary: #2c2c2c;
+      --text-secondary: #6b6b6b;
+      --text-muted: #9a9a9a;
+      --accent: #5b7fa4;
+      --accent-hover: #4a6d8f;
+      --accent-light: #e8eff5;
+      --green: #6aad7b;
+      --green-hover: #5a9a6a;
+      --red: #c47171;
+      --red-hover: #b35e5e;
+      --border: #e5e0d8;
+      --shadow: rgba(0, 0, 0, 0.06);
+      --shadow-hover: rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --radius-lg: 16px;
+      --transition: 0.2s ease;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* =========================================
+       Reset & Base
+       ========================================= */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* =========================================
+       Layout
+       ========================================= */
+    #app {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+      min-height: 100vh;
+    }
+
+    .logo-container {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-top: 8px;
+    }
+
+    .logo-container img {
+      max-width: 180px;
+      height: auto;
+      cursor: pointer;
+    }
+
+    /* =========================================
+       Screens
+       ========================================= */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================
+       Typography
+       ========================================= */
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* =========================================
+       Buttons
+       ========================================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+      text-decoration: none;
+      line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 12px rgba(91, 127, 164, 0.3);
+    }
+
+    .btn-green {
+      background: var(--green);
+      color: #fff;
+      flex: 1;
+    }
+
+    .btn-green:hover {
+      background: var(--green-hover);
+      box-shadow: 0 4px 12px rgba(106, 173, 123, 0.3);
+    }
+
+    .btn-red {
+      background: var(--red);
+      color: #fff;
+      flex: 1;
+    }
+
+    .btn-red:hover {
+      background: var(--red-hover);
+      box-shadow: 0 4px 12px rgba(196, 113, 113, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .btn-small {
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+
+    .btn-block {
+      display: flex;
+      width: 100%;
+    }
+
+    /* =========================================
+       Welcome Screen
+       ========================================= */
+    .welcome-content {
+      text-align: center;
+      padding-top: 20px;
+    }
+
+    .welcome-content h1 {
+      margin-bottom: 12px;
+    }
+
+    .welcome-content p {
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 32px;
+    }
+
+    .feature-list {
+      text-align: left;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 32px;
+      border: 1px solid var(--border);
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+    }
+
+    .feature-item:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .feature-text {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .feature-text strong {
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* =========================================
+       Dashboard Screen
+       ========================================= */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .due-message {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      text-align: center;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .due-message h2 {
+      margin-bottom: 8px;
+    }
+
+    .due-message p {
+      margin-bottom: 24px;
+      color: var(--text-muted);
+    }
+
+    .dashboard-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* =========================================
+       Import Screen
+       ========================================= */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: var(--bg-card);
+      margin-bottom: 24px;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .drop-zone-text {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone-hint {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .format-info {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .format-info code {
+      background: var(--bg-secondary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }
+
+    /* =========================================
+       Preview
+       ========================================= */
+    .preview-section {
+      display: none;
+      margin-bottom: 24px;
+    }
+
+    .preview-section.visible {
+      display: block;
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .preview-table th {
+      background: var(--bg-secondary);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .preview-table td {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      max-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preview-info {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* =========================================
+       Learn Screen
+       ========================================= */
+    .learn-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .progress-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-secondary);
+      border-radius: 2px;
+      margin-bottom: 32px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* Card */
+    .card-container {
+      perspective: 1200px;
+      margin-bottom: 32px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      min-height: 260px;
+      transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .card-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      min-height: 260px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 12px var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 28px;
+    }
+
+    .card-face-back {
+      transform: rotateY(180deg);
+    }
+
+    .card-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .card-content {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      text-align: center;
+      color: var(--text-primary);
+      word-break: break-word;
+      width: 100%;
+    }
+
+    .card-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 20px;
+    }
+
+    .answer-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .answer-buttons .btn {
+      padding: 16px 24px;
+      font-size: 1.05rem;
+    }
+
+    /* =========================================
+       Done Screen
+       ========================================= */
+    .done-screen {
+      text-align: center;
+      padding-top: 40px;
+    }
+
+    .done-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .done-stats {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin: 24px 0;
+      border: 1px solid var(--border);
+    }
+
+    .done-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.95rem;
+    }
+
+    .done-stat:not(:last-child) {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .done-stat-label {
+      color: var(--text-secondary);
+    }
+
+    .done-stat-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* =========================================
+       Settings / Export
+       ========================================= */
+    .settings-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .settings-section h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .settings-section p {
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+
+    .danger-zone {
+      border-color: var(--red);
+    }
+
+    .danger-zone h3 {
+      color: var(--red);
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: var(--red-hover);
+    }
+
+    /* =========================================
+       Navigation
+       ========================================= */
+    .nav-bottom {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      padding: 10px 18px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active {
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* =========================================
+       Utility
+       ========================================= */
+    .text-center { text-align: center; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .hidden { display: none !important; }
+
+    /* =========================================
+       Responsive
+       ========================================= */
+    @media (max-width: 480px) {
+      #app {
+        padding: 16px 16px 32px;
+      }
+
+      .logo-container img {
+        max-width: 140px;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+      }
+
+      .stats-grid {
+        gap: 8px;
+      }
+
+      .stat-card {
+        padding: 12px 8px;
+      }
+
+      .stat-number {
+        font-size: 1.5rem;
+      }
+
+      .card-face {
+        min-height: 220px;
+        padding: 24px 20px;
+      }
+
+      .card-content {
+        font-size: 1.1rem;
+      }
+
+      .answer-buttons .btn {
+        padding: 14px 16px;
+        font-size: 1rem;
+      }
+
+      .drop-zone {
+        padding: 36px 20px;
+      }
+    }
+
+    /* =========================================
+       Confirm Dialog
+       ========================================= */
+    .dialog-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .dialog-overlay.visible {
+      display: flex;
+    }
+
+    .dialog-box {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+
+    .dialog-box h3 {
+      margin-bottom: 12px;
+      font-size: 1.1rem;
+    }
+
+    .dialog-box p {
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+
+    .dialog-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Logo -->
+  <div class="logo-container">
+    <img src="https://bildungssprache.net/wp-content/uploads/vanki-logo.png" alt="Vanki" id="logo" />
+  </div>
+
+  <!-- ===== Welcome Screen ===== -->
+  <div class="screen" id="screen-welcome">
+    <div class="welcome-content">
+      <h1>Willkommen bei Vanki</h1>
+      <p>Lernen mit Karteikarten, einfach und effektiv. Deine Daten bleiben lokal in deinem Browser.</p>
+
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">1</div>
+          <div class="feature-text">
+            <strong>CSV importieren</strong>
+            Lade deine Karteikarten als CSV-Datei hoch. Format: Vorderseite und Rueckseite getrennt durch Semikolon oder Komma.
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">2</div>
+          <div class="feature-text">
+            <strong>Karten lernen</strong>
+            Sieh dir die Vorderseite an, ueberlege, und dreh die Karte um. Markiere, ob du es wusstest.
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">3</div>
+          <div class="feature-text">
+            <strong>Automatische Wiederholung</strong>
+            Vanki zeigt dir Karten genau dann wieder, wenn du sie zu vergessen drohst.
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btn-welcome-import">CSV importieren</button>
+    </div>
+  </div>
+
+  <!-- ===== Dashboard Screen ===== -->
+  <div class="screen" id="screen-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="stat-due">0</div>
+        <div class="stat-label">Faellig</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-streak">0</div>
+        <div class="stat-label">Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">Gesamt</div>
+      </div>
+    </div>
+
+    <div class="due-message" id="due-message">
+      <h2 id="due-title">Bereit zum Lernen</h2>
+      <p id="due-subtitle">Keine faelligen Karten heute.</p>
+      <button class="btn btn-primary" id="btn-start-learn">Lernen starten</button>
+    </div>
+
+    <div class="dashboard-actions">
+      <button class="btn btn-outline btn-block" id="btn-dash-import">Weitere Karten importieren</button>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-btn active" data-nav="dashboard">Lernen</button>
+      <button class="nav-btn" data-nav="settings">Einstellungen</button>
+    </div>
+  </div>
+
+  <!-- ===== Import Screen ===== -->
+  <div class="screen" id="screen-import">
+    <h2>Karten importieren</h2>
+
+    <div class="drop-zone" id="drop-zone">
+      <div class="drop-zone-text">CSV-Datei hierher ziehen oder klicken</div>
+      <div class="drop-zone-hint">Format: Vorderseite;Rueckseite (UTF-8)</div>
+      <input type="file" class="file-input" id="file-input" accept=".csv,.txt" />
+    </div>
+
+    <div class="format-info">
+      Unterstuetzte Formate:<br>
+      <code>Frage;Antwort</code> oder <code>Frage,Antwort</code><br>
+      Felder mit Kommas in Anfuehrungszeichen einschliessen:<br>
+      <code>"Frage, mit Komma";"Antwort"</code>
+    </div>
+
+    <div class="preview-section" id="preview-section">
+      <h2>Vorschau</h2>
+      <p class="preview-info" id="preview-info"></p>
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th style="width:50%">Vorderseite</th>
+            <th style="width:50%">Rueckseite</th>
+          </tr>
+        </thead>
+        <tbody id="preview-body"></tbody>
+      </table>
+      <div class="preview-actions">
+        <button class="btn btn-primary" id="btn-import-confirm">Importieren</button>
+        <button class="btn btn-outline" id="btn-import-cancel">Abbrechen</button>
+      </div>
+    </div>
+
+    <button class="btn btn-outline btn-small mt-24" id="btn-import-back">Zurueck</button>
+  </div>
+
+  <!-- ===== Learn Screen ===== -->
+  <div class="screen" id="screen-learn">
+    <div class="learn-header">
+      <span class="progress-text" id="learn-progress">Karte 1 von 20</span>
+      <button class="btn btn-outline btn-small" id="btn-learn-stop">Beenden</button>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+
+    <div class="card-container" id="card-container">
+      <div class="card-inner" id="card-inner">
+        <div class="card-face card-face-front">
+          <div class="card-label">Vorderseite</div>
+          <div class="card-content" id="card-front-text"></div>
+          <div class="card-hint">Klicken oder Leertaste zum Umdrehen</div>
+        </div>
+        <div class="card-face card-face-back">
+          <div class="card-label">Rueckseite</div>
+          <div class="card-content" id="card-back-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="answer-buttons hidden" id="answer-buttons">
+      <button class="btn btn-red" id="btn-again">Nochmal</button>
+      <button class="btn btn-green" id="btn-known">Gewusst</button>
+    </div>
+  </div>
+
+  <!-- ===== Done Screen ===== -->
+  <div class="screen" id="screen-done">
+    <div class="done-screen">
+      <div class="done-title">Geschafft!</div>
+      <p>Du hast diese Lernsession abgeschlossen.</p>
+
+      <div class="done-stats">
+        <div class="done-stat">
+          <span class="done-stat-label">Karten gelernt</span>
+          <span class="done-stat-value" id="done-total">0</span>
+        </div>
+        <div class="done-stat">
+          <span class="done-stat-label">Gewusst</span>
+          <span class="done-stat-value" id="done-known">0</span>
+        </div>
+        <div class="done-stat">
+          <span class="done-stat-label">Nochmal</span>
+          <span class="done-stat-value" id="done-again">0</span>
+        </div>
+        <div class="done-stat">
+          <span class="done-stat-label">Streak</span>
+          <span class="done-stat-value" id="done-streak">0</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btn-done-back">Zurueck zur Uebersicht</button>
+    </div>
+  </div>
+
+  <!-- ===== Settings Screen ===== -->
+  <div class="screen" id="screen-settings">
+    <h2>Einstellungen</h2>
+
+    <div class="settings-section">
+      <h3>Backup exportieren</h3>
+      <p>Exportiere alle Karten als CSV-Datei, um sie zu sichern oder in anderen Programmen zu verwenden.</p>
+      <button class="btn btn-outline btn-small" id="btn-export">Als CSV exportieren</button>
+    </div>
+
+    <div class="settings-section">
+      <h3>Karten importieren</h3>
+      <p>Neue Karten aus einer CSV-Datei hinzufuegen.</p>
+      <button class="btn btn-outline btn-small" id="btn-settings-import">CSV importieren</button>
+    </div>
+
+    <div class="settings-section danger-zone">
+      <h3>Alle Daten loeschen</h3>
+      <p>Entfernt alle Karten und den Lernfortschritt unwiderruflich.</p>
+      <button class="btn btn-danger btn-small" id="btn-delete-all">Alle Daten loeschen</button>
+    </div>
+
+    <div class="nav-bottom">
+      <button class="nav-btn" data-nav="dashboard">Lernen</button>
+      <button class="nav-btn active" data-nav="settings">Einstellungen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="dialog-overlay" id="dialog-overlay">
+  <div class="dialog-box">
+    <h3 id="dialog-title">Bist du sicher?</h3>
+    <p id="dialog-message">Diese Aktion kann nicht rueckgaengig gemacht werden.</p>
+    <div class="dialog-actions">
+      <button class="btn btn-outline btn-small" id="dialog-cancel">Abbrechen</button>
+      <button class="btn btn-danger btn-small" id="dialog-confirm">Loeschen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* =========================================
+     Storage Module
+     ========================================= */
+  const Storage = {
+    STORAGE_KEY: 'vanki_data',
+
+    getDefaultData() {
+      return {
+        cards: [],
+        stats: {
+          streak: 0,
+          lastStudy: null,
+          totalReviews: 0
+        }
+      };
+    },
+
+    load() {
+      try {
+        const raw = localStorage.getItem(this.STORAGE_KEY);
+        if (!raw) return this.getDefaultData();
+        const data = JSON.parse(raw);
+        if (!data.cards) data.cards = [];
+        if (!data.stats) data.stats = { streak: 0, lastStudy: null, totalReviews: 0 };
+        return data;
+      } catch (e) {
+        console.error('Storage load error:', e);
+        return this.getDefaultData();
+      }
+    },
+
+    save(data) {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('Storage save error:', e);
+      }
+    },
+
+    exportCSV(cards) {
+      const lines = cards.map(card => {
+        const front = card.front.includes(';') || card.front.includes('"')
+          ? '"' + card.front.replace(/"/g, '""') + '"'
+          : card.front;
+        const back = card.back.includes(';') || card.back.includes('"')
+          ? '"' + card.back.replace(/"/g, '""') + '"'
+          : card.back;
+        return front + ';' + back;
+      });
+      return lines.join('\n');
+    },
+
+    downloadCSV(cards) {
+      const csv = this.exportCSV(cards);
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vanki-backup-' + new Date().toISOString().slice(0, 10) + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
+    clearAll() {
+      localStorage.removeItem(this.STORAGE_KEY);
+    }
+  };
+
+  /* =========================================
+     SM-2 Algorithm Module
+     ========================================= */
+  const SM2 = {
+    today() {
+      return new Date().toISOString().slice(0, 10);
+    },
+
+    calculateNext(card, wasCorrect) {
+      let interval = card.interval || 1;
+      let easeFactor = card.easeFactor || 2.5;
+
+      if (wasCorrect) {
+        if (interval === 1) {
+          interval = 1;
+        } else if (interval <= 2) {
+          interval = 6;
+        } else {
+          interval = Math.ceil(interval * easeFactor);
+        }
+
+        easeFactor = easeFactor + 0.1;
+        if (easeFactor > 2.5) {
+          easeFactor = 2.5;
+        }
+      } else {
+        interval = 1;
+        easeFactor = easeFactor - 0.2;
+        if (easeFactor < 1.3) {
+          easeFactor = 1.3;
+        }
+      }
+
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + interval);
+
+      return {
+        interval: interval,
+        easeFactor: Math.round(easeFactor * 100) / 100,
+        nextReview: nextDate.toISOString().slice(0, 10),
+        repetitions: wasCorrect ? (card.repetitions || 0) + 1 : 0
+      };
+    },
+
+    getDueCards(cards) {
+      const today = this.today();
+      return cards
+        .filter(c => c.nextReview && c.nextReview <= today)
+        .sort((a, b) => a.nextReview.localeCompare(b.nextReview));
+    },
+
+    getNewCards(cards, limit) {
+      return cards
+        .filter(c => !c.nextReview)
+        .slice(0, limit);
+    },
+
+    buildSession(cards) {
+      const due = this.getDueCards(cards);
+      let session = due.slice();
+
+      if (session.length < 20) {
+        const newCards = this.getNewCards(cards, 20 - session.length);
+        session = session.concat(newCards);
+      }
+
+      return session.slice(0, 50);
+    }
+  };
+
+  /* =========================================
+     Import Module
+     ========================================= */
+  const Import = {
+    detectDelimiter(text) {
+      const firstLines = text.split('\n').slice(0, 5).filter(l => l.trim());
+      let semicolonCount = 0;
+      let commaCount = 0;
+
+      for (const line of firstLines) {
+        // Count delimiters outside of quotes
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          if (line[i] === '"') {
+            inQuotes = !inQuotes;
+          } else if (!inQuotes) {
+            if (line[i] === ';') semicolonCount++;
+            if (line[i] === ',') commaCount++;
+          }
+        }
+      }
+
+      return semicolonCount >= commaCount ? ';' : ',';
+    },
+
+    parseLine(line, delimiter) {
+      const fields = [];
+      let current = '';
+      let inQuotes = false;
+      let i = 0;
+
+      while (i < line.length) {
+        const char = line[i];
+
+        if (inQuotes) {
+          if (char === '"') {
+            if (i + 1 < line.length && line[i + 1] === '"') {
+              current += '"';
+              i += 2;
+              continue;
+            } else {
+              inQuotes = false;
+              i++;
+              continue;
+            }
+          } else {
+            current += char;
+            i++;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+            i++;
+          } else if (char === delimiter) {
+            fields.push(current.trim());
+            current = '';
+            i++;
+          } else {
+            current += char;
+            i++;
+          }
+        }
+      }
+
+      fields.push(current.trim());
+      return fields;
+    },
+
+    parseCSV(text) {
+      const delimiter = this.detectDelimiter(text);
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      const cards = [];
+
+      for (const line of lines) {
+        const fields = this.parseLine(line, delimiter);
+        if (fields.length >= 2 && fields[0] && fields[1]) {
+          cards.push({
+            front: fields[0],
+            back: fields[1]
+          });
+        }
+      }
+
+      return cards;
+    },
+
+    validateCards(cards) {
+      return cards.filter(c =>
+        c.front && c.front.trim().length > 0 &&
+        c.back && c.back.trim().length > 0
+      );
+    },
+
+    generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    },
+
+    cardsToStorageFormat(parsedCards) {
+      const today = SM2.today();
+      return parsedCards.map(c => ({
+        id: this.generateId(),
+        front: c.front.trim(),
+        back: c.back.trim(),
+        interval: 1,
+        easeFactor: 2.5,
+        nextReview: null,
+        repetitions: 0,
+        created: today
+      }));
+    }
+  };
+
+  /* =========================================
+     UI Module
+     ========================================= */
+  const UI = {
+    screens: {},
+    elements: {},
+
+    init() {
+      this.screens = {
+        welcome: document.getElementById('screen-welcome'),
+        dashboard: document.getElementById('screen-dashboard'),
+        import: document.getElementById('screen-import'),
+        learn: document.getElementById('screen-learn'),
+        done: document.getElementById('screen-done'),
+        settings: document.getElementById('screen-settings')
+      };
+
+      this.elements = {
+        logo: document.getElementById('logo'),
+        dropZone: document.getElementById('drop-zone'),
+        fileInput: document.getElementById('file-input'),
+        previewSection: document.getElementById('preview-section'),
+        previewBody: document.getElementById('preview-body'),
+        previewInfo: document.getElementById('preview-info'),
+        cardContainer: document.getElementById('card-container'),
+        cardInner: document.getElementById('card-inner'),
+        cardFrontText: document.getElementById('card-front-text'),
+        cardBackText: document.getElementById('card-back-text'),
+        answerButtons: document.getElementById('answer-buttons'),
+        learnProgress: document.getElementById('learn-progress'),
+        progressBar: document.getElementById('progress-bar'),
+        statDue: document.getElementById('stat-due'),
+        statStreak: document.getElementById('stat-streak'),
+        statTotal: document.getElementById('stat-total'),
+        dueTitle: document.getElementById('due-title'),
+        dueSubtitle: document.getElementById('due-subtitle'),
+        btnStartLearn: document.getElementById('btn-start-learn'),
+        doneTotalEl: document.getElementById('done-total'),
+        doneKnownEl: document.getElementById('done-known'),
+        doneAgainEl: document.getElementById('done-again'),
+        doneStreakEl: document.getElementById('done-streak'),
+        dialogOverlay: document.getElementById('dialog-overlay'),
+        dialogTitle: document.getElementById('dialog-title'),
+        dialogMessage: document.getElementById('dialog-message'),
+        dialogConfirm: document.getElementById('dialog-confirm'),
+        dialogCancel: document.getElementById('dialog-cancel')
+      };
+    },
+
+    showScreen(name) {
+      Object.values(this.screens).forEach(s => s.classList.remove('active'));
+      if (this.screens[name]) {
+        this.screens[name].classList.add('active');
+      }
+    },
+
+    showDashboard(data) {
+      const due = SM2.getDueCards(data.cards);
+      const newCards = SM2.getNewCards(data.cards, 20);
+      const sessionSize = Math.min(due.length + newCards.length, 50);
+
+      this.elements.statDue.textContent = due.length;
+      this.elements.statStreak.textContent = data.stats.streak || 0;
+      this.elements.statTotal.textContent = data.cards.length;
+
+      if (due.length > 0) {
+        this.elements.dueTitle.textContent = due.length + ' Karten warten auf dich';
+        this.elements.dueSubtitle.textContent = sessionSize + ' Karten in der naechsten Session';
+        this.elements.btnStartLearn.textContent = 'Lernen starten';
+        this.elements.btnStartLearn.classList.remove('hidden');
+      } else if (newCards.length > 0) {
+        this.elements.dueTitle.textContent = 'Neue Karten verfuegbar';
+        this.elements.dueSubtitle.textContent = newCards.length + ' neue Karten zum Lernen';
+        this.elements.btnStartLearn.textContent = 'Neue Karten lernen';
+        this.elements.btnStartLearn.classList.remove('hidden');
+      } else if (data.cards.length > 0) {
+        this.elements.dueTitle.textContent = 'Alles erledigt';
+        this.elements.dueSubtitle.textContent = 'Heute sind keine Karten faellig. Komm morgen wieder!';
+        this.elements.btnStartLearn.classList.add('hidden');
+      } else {
+        this.elements.dueTitle.textContent = 'Noch keine Karten';
+        this.elements.dueSubtitle.textContent = 'Importiere eine CSV-Datei, um loszulegen.';
+        this.elements.btnStartLearn.classList.add('hidden');
+      }
+
+      this.showScreen('dashboard');
+    },
+
+    showCard(card, index, total) {
+      this.elements.cardFrontText.textContent = card.front;
+      this.elements.cardBackText.textContent = card.back;
+      this.elements.learnProgress.textContent = 'Karte ' + (index + 1) + ' von ' + total;
+      this.elements.progressBar.style.width = ((index + 1) / total * 100) + '%';
+
+      // Reset card state
+      this.elements.cardInner.classList.remove('flipped');
+      this.elements.answerButtons.classList.add('hidden');
+    },
+
+    flipCard() {
+      this.elements.cardInner.classList.add('flipped');
+      this.elements.answerButtons.classList.remove('hidden');
+    },
+
+    isFlipped() {
+      return this.elements.cardInner.classList.contains('flipped');
+    },
+
+    showPreview(cards) {
+      const previewCards = cards.slice(0, 5);
+      this.elements.previewBody.innerHTML = previewCards.map(c =>
+        '<tr><td>' + this.escapeHtml(c.front) + '</td><td>' + this.escapeHtml(c.back) + '</td></tr>'
+      ).join('');
+
+      this.elements.previewInfo.textContent = cards.length + ' Karten erkannt' +
+        (cards.length > 5 ? ' (Vorschau: erste 5)' : '');
+
+      this.elements.previewSection.classList.add('visible');
+    },
+
+    hidePreview() {
+      this.elements.previewSection.classList.remove('visible');
+    },
+
+    showDone(sessionStats, streak) {
+      this.elements.doneTotalEl.textContent = sessionStats.total;
+      this.elements.doneKnownEl.textContent = sessionStats.known;
+      this.elements.doneAgainEl.textContent = sessionStats.again;
+      this.elements.doneStreakEl.textContent = streak + ' Tage';
+      this.showScreen('done');
+    },
+
+    showDialog(title, message, confirmText) {
+      return new Promise((resolve) => {
+        this.elements.dialogTitle.textContent = title;
+        this.elements.dialogMessage.textContent = message;
+        this.elements.dialogConfirm.textContent = confirmText || 'Bestaetigen';
+        this.elements.dialogOverlay.classList.add('visible');
+
+        const onConfirm = () => {
+          cleanup();
+          resolve(true);
+        };
+
+        const onCancel = () => {
+          cleanup();
+          resolve(false);
+        };
+
+        const cleanup = () => {
+          this.elements.dialogOverlay.classList.remove('visible');
+          this.elements.dialogConfirm.removeEventListener('click', onConfirm);
+          this.elements.dialogCancel.removeEventListener('click', onCancel);
+        };
+
+        this.elements.dialogConfirm.addEventListener('click', onConfirm);
+        this.elements.dialogCancel.addEventListener('click', onCancel);
+      });
+    },
+
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  };
+
+  /* =========================================
+     App Module
+     ========================================= */
+  const App = {
+    data: null,
+    session: [],
+    sessionIndex: 0,
+    sessionStats: { total: 0, known: 0, again: 0 },
+    pendingImportCards: [],
+
+    init() {
+      UI.init();
+      this.data = Storage.load();
+      this.bindEvents();
+      this.route();
+    },
+
+    route() {
+      if (this.data.cards.length === 0) {
+        UI.showScreen('welcome');
+      } else {
+        UI.showDashboard(this.data);
+      }
+    },
+
+    bindEvents() {
+      // Logo click -> home
+      UI.elements.logo.addEventListener('click', () => {
+        if (this.data.cards.length === 0) {
+          UI.showScreen('welcome');
+        } else {
+          UI.showDashboard(this.data);
+        }
+      });
+
+      // Welcome -> Import
+      document.getElementById('btn-welcome-import').addEventListener('click', () => {
+        UI.showScreen('import');
+      });
+
+      // Dashboard -> Import
+      document.getElementById('btn-dash-import').addEventListener('click', () => {
+        UI.hidePreview();
+        UI.showScreen('import');
+      });
+
+      // Dashboard -> Learn
+      UI.elements.btnStartLearn.addEventListener('click', () => {
+        this.startSession();
+      });
+
+      // Import: Drop Zone
+      const dropZone = UI.elements.dropZone;
+      const fileInput = UI.elements.fileInput;
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) this.handleFile(file);
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) this.handleFile(file);
+        fileInput.value = '';
+      });
+
+      // Import: Confirm/Cancel
+      document.getElementById('btn-import-confirm').addEventListener('click', () => {
+        this.confirmImport();
+      });
+
+      document.getElementById('btn-import-cancel').addEventListener('click', () => {
+        this.pendingImportCards = [];
+        UI.hidePreview();
+      });
+
+      document.getElementById('btn-import-back').addEventListener('click', () => {
+        UI.hidePreview();
+        this.pendingImportCards = [];
+        this.route();
+      });
+
+      // Learn: Card flip
+      UI.elements.cardContainer.addEventListener('click', () => {
+        if (!UI.isFlipped()) {
+          UI.flipCard();
+        }
+      });
+
+      // Learn: Answer buttons
+      document.getElementById('btn-known').addEventListener('click', () => {
+        this.handleAnswer(true);
+      });
+
+      document.getElementById('btn-again').addEventListener('click', () => {
+        this.handleAnswer(false);
+      });
+
+      // Learn: Stop
+      document.getElementById('btn-learn-stop').addEventListener('click', () => {
+        this.endSession();
+      });
+
+      // Done: Back
+      document.getElementById('btn-done-back').addEventListener('click', () => {
+        UI.showDashboard(this.data);
+      });
+
+      // Settings: Export
+      document.getElementById('btn-export').addEventListener('click', () => {
+        if (this.data.cards.length === 0) return;
+        Storage.downloadCSV(this.data.cards);
+      });
+
+      // Settings: Import
+      document.getElementById('btn-settings-import').addEventListener('click', () => {
+        UI.hidePreview();
+        UI.showScreen('import');
+      });
+
+      // Settings: Delete all
+      document.getElementById('btn-delete-all').addEventListener('click', async () => {
+        const confirmed = await UI.showDialog(
+          'Alle Daten loeschen?',
+          'Alle Karten und der Lernfortschritt werden unwiderruflich geloescht.',
+          'Endgueltig loeschen'
+        );
+        if (confirmed) {
+          Storage.clearAll();
+          this.data = Storage.getDefaultData();
+          UI.showScreen('welcome');
+        }
+      });
+
+      // Navigation
+      document.querySelectorAll('[data-nav]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-nav');
+          if (target === 'dashboard') {
+            UI.showDashboard(this.data);
+          } else if (target === 'settings') {
+            UI.showScreen('settings');
+          }
+        });
+      });
+
+      // Keyboard: Space to flip, 1/2 for answer
+      document.addEventListener('keydown', (e) => {
+        const learnScreen = UI.screens.learn;
+        if (!learnScreen.classList.contains('active')) return;
+
+        if (e.code === 'Space' || e.key === ' ') {
+          e.preventDefault();
+          if (!UI.isFlipped()) {
+            UI.flipCard();
+          }
+        } else if (e.key === '1' || e.key === 'ArrowLeft') {
+          if (UI.isFlipped()) {
+            this.handleAnswer(false);
+          }
+        } else if (e.key === '2' || e.key === 'ArrowRight') {
+          if (UI.isFlipped()) {
+            this.handleAnswer(true);
+          }
+        }
+      });
+    },
+
+    handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        const parsed = Import.parseCSV(text);
+        const valid = Import.validateCards(parsed);
+
+        if (valid.length === 0) {
+          alert('Keine gueltigen Karten gefunden. Bitte pruefe das Format der Datei.');
+          return;
+        }
+
+        this.pendingImportCards = valid;
+        UI.showPreview(valid);
+      };
+      reader.readAsText(file, 'UTF-8');
+    },
+
+    confirmImport() {
+      if (this.pendingImportCards.length === 0) return;
+
+      const newCards = Import.cardsToStorageFormat(this.pendingImportCards);
+      this.data.cards = this.data.cards.concat(newCards);
+      Storage.save(this.data);
+
+      this.pendingImportCards = [];
+      UI.hidePreview();
+      UI.showDashboard(this.data);
+    },
+
+    startSession() {
+      this.session = SM2.buildSession(this.data.cards);
+
+      if (this.session.length === 0) {
+        UI.showDashboard(this.data);
+        return;
+      }
+
+      this.sessionIndex = 0;
+      this.sessionStats = { total: 0, known: 0, again: 0 };
+      UI.showScreen('learn');
+      UI.showCard(this.session[0], 0, this.session.length);
+    },
+
+    handleAnswer(wasCorrect) {
+      const sessionCard = this.session[this.sessionIndex];
+
+      // Find the card in main data by id
+      const cardIndex = this.data.cards.findIndex(c => c.id === sessionCard.id);
+      if (cardIndex === -1) return;
+
+      const card = this.data.cards[cardIndex];
+      const updated = SM2.calculateNext(card, wasCorrect);
+
+      card.interval = updated.interval;
+      card.easeFactor = updated.easeFactor;
+      card.nextReview = updated.nextReview;
+      card.repetitions = updated.repetitions;
+
+      // Update stats
+      this.sessionStats.total++;
+      if (wasCorrect) {
+        this.sessionStats.known++;
+      } else {
+        this.sessionStats.again++;
+      }
+
+      this.data.stats.totalReviews++;
+
+      // Save after each answer
+      Storage.save(this.data);
+
+      // Next card or done
+      this.sessionIndex++;
+      if (this.sessionIndex >= this.session.length) {
+        this.endSession();
+      } else {
+        UI.showCard(this.session[this.sessionIndex], this.sessionIndex, this.session.length);
+      }
+    },
+
+    endSession() {
+      // Update streak
+      const today = SM2.today();
+      if (this.sessionStats.total > 0) {
+        if (this.data.stats.lastStudy === today) {
+          // Already studied today, keep streak
+        } else {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+          if (this.data.stats.lastStudy === yesterdayStr) {
+            this.data.stats.streak++;
+          } else if (!this.data.stats.lastStudy) {
+            this.data.stats.streak = 1;
+          } else {
+            this.data.stats.streak = 1;
+          }
+          this.data.stats.lastStudy = today;
+        }
+        Storage.save(this.data);
+      }
+
+      UI.showDone(this.sessionStats, this.data.stats.streak);
+    }
+  };
+
+  /* =========================================
+     Initialize
+     ========================================= */
+  document.addEventListener('DOMContentLoaded', () => {
+    App.init();
+  });
+</script>
+
+</body>
+</html>
