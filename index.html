@@ -1223,10 +1223,11 @@
 
     parseCSV(text) {
       const delimiter = this.detectDelimiter(text);
-      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      const lines = text.split(/\r?\n/);
       const cards = [];
 
       for (const line of lines) {
+        if (!line.trim()) continue;
         const fields = this.parseLine(line, delimiter);
         if (fields.length >= 2 && fields[0] && fields[1]) {
           cards.push({
